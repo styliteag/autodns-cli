@@ -7,9 +7,11 @@ declare -r prog=$(basename "$0")
 declare -r endpoint=https://api.autodns.com/v1
 declare -r ttl=120
 
-if [ -f './.autodns-cli.rc' ]; then
+if [ -f ~/.autodns-cli.rc ]; then
+    set -o allexport
     # shellcheck disable=SC1091
-    source ./.autodns-cli.rc
+    source ~/.autodns-cli.rc
+    set +o allexport
 fi
 
 source ./func.sh
