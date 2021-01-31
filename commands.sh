@@ -46,8 +46,8 @@ sub_delete() {
 }
 sub_help() {
 	echo ""
-    echo "$(<./README.md)"
-	echo ""
+    cat $( cd "$( dirname $(readlink -f ${BASH_SOURCE[0]}) )" >/dev/null 2>&1 && pwd )/README.md
+    echo ""
 }
 
 # show current zone "info"
