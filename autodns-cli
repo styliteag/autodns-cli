@@ -7,6 +7,16 @@ declare -r prog=$(basename "$0")
 declare -r endpoint=https://api.autodns.com/v1
 declare -r ttl=120
 
+if ! which jq >/dev/null 2>&1; then
+    echo "jq not installed, please install jq"
+    exit 1
+fi
+
+if ! which curl >/dev/null 2>&1; then
+    echo "curl not installed, please install curl"
+    exit 1
+fi
+
 if [ -f ~/.autodns-cli.rc ]; then
     set -o allexport
     # shellcheck disable=SC1091
