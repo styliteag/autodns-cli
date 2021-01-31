@@ -32,6 +32,20 @@ case $subcommand in
     "" | "-h" | "--help")
         sub_help
         ;;
+    "-z" | "--zone")
+        shift
+        MY_ZONE=$1
+        shift
+        subcommand=$1
+        shift
+        declare -r command="sub_${subcommand}" 
+        $command "$@"
+        if [ $? = 127 ]; then
+            echo "Error: '$subcommand' is not a known subcommand." >&2
+            echo "       Run '${prog} --help' for a list of known subcommands." >&2
+            exit 1
+        fi
+        ;;
     *)
         shift
         declare -r command="sub_${subcommand}" 
