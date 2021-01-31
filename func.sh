@@ -80,7 +80,8 @@ function _validate_response() {
 
     _log "_validate_response"
 
-    local valid_json=$(echo "$resp" | jq -e)
+    # I dont why why "jq -e" does not work here
+    local valid_json=$(echo "$resp"|jq -c -r .)
     if [ $? -ne 0 ]; then
         printf "Invalid or broken JSON (%s): %s" "$valid_json" "$resp"
         return $?
