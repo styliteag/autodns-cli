@@ -406,17 +406,11 @@ sub_update() {
         return 1
     fi
 
-    dc=""
-    dc=${dc}X
-    _log "AAAA-$dc $MY_ZONE"
     local request_uri=$(_zone_exists "$MY_ZONE"||echo "ERROR")
     if [[  "$request_uri" =~ "ERROR" ]]; then
         printf "Zone does not exist (my_zone: %s) %s" "$MY_ZONE" "$request_uri"
         return 1
     fi
-
-    dc=${dc}X
-    _log "AAAA-$dc"
 
     local data=$(_get_zone "$request_uri")
     if [ -z "$data"  ]; then
