@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #set -x
-set -euo pipefail
+#set -euo pipefail
 
 declare -r prog=$(basename "$0")
 declare -r endpoint=https://api.autodns.com/v1
@@ -39,9 +39,13 @@ case $subcommand in
         shift
         declare -r command="sub_${subcommand}" 
         $command "$@"
-        if [ $? = 127 ]; then
+        err=$?
+        if [ $err = 127 ]; then
             echo "Error: '$subcommand' is not a known subcommand." >&2
             echo "       Run '${prog} --help' for a list of known subcommands." >&2
+            exit 1
+        elif [ $err -ne 0 ]; then
+            echo "Error: '$subcommand' Failed." >&2
             exit 1
         fi
         ;;
@@ -49,9 +53,13 @@ case $subcommand in
         shift
         declare -r command="sub_${subcommand}" 
         $command "$@"
-        if [ $? = 127 ]; then
+        err=$?
+        if [ $err = 127 ]; then
             echo "Error: '$subcommand' is not a known subcommand." >&2
             echo "       Run '${prog} --help' for a list of known subcommands." >&2
+            exit 1
+        elif [ $err -ne 0 ]; then
+            echo "Error: '$subcommand' Failed." >&2
             exit 1
         fi
         ;;

@@ -4,7 +4,7 @@
 
 function _log() {
     local msg=$1
-    #logger -t "$prog" -i "${prog}: ${msg}"
+    logger -t "$prog" -i "${prog}: ${msg}"
     #if [[ "DEBUGSYSLOG" = "true" ]] ;then logger -t "$prog" -i "${prog}: ${msg}";fi 
     #if [[ "DEBUGSTDERR" = "true" ]] ;then echo "$msg" >&2 ;fi 
     #echo "$msg" >&2 
@@ -57,7 +57,7 @@ function _make_request() {
     #_log "_make_request: $body"
 
     if [ -n "$body" ]; then
-        _log "With body!"
+        #_log "With body!"
         response=$($cmd -d "$body")
     else
         response=$($cmd)
@@ -66,13 +66,12 @@ function _make_request() {
     _log "Curl said: $? -> $response"
     if [ $? -ne 0 ]; then
         _log "Error in curl request!"
-
         return 1
     fi
  
     _validate_response "$response"
     if [ $? -ne 0 ]; then
-        echo "error"
+        #echo "error"
         return 1
     fi
 
@@ -87,14 +86,13 @@ function _make_request() {
 function _validate_response() {
     local resp=$1
 
-    _log "_validate_response"
+    _log "_validate_response: $resp"
 
-    # I dont why why "jq -e" does not work here
-#    echo "$resp"|jq -c -r .
-#    if [ $? -ne 0 ]; then
-#        printf "Invalid or broken JSON (%s): %s" "$valid_json" "$resp"
-#        return 1
-#    fi
+    echo "$resp"|jq -c -r .  >/dev/null
+    if [ $? -ne 0 ]; then
+        _log "Invalid or broken JSON: $resp"
+        return 1
+    fi
 
     local status=$(echo "$resp"|jq -c -r .status.type)
     if [ -z "${status}" ]; then
@@ -229,8 +227,8 @@ function _zone_exists() {
 
     _log "Filter: $filter"
 
-    local zones=$(_make_request "$request" "$filter")
-    if [ $? -ne 0 ]; then
+    local zones=$(_make_request "$request" "$filter"||echo "ERROR")
+    if [[ "$zones" =~ "ERROR" ]]; then
         echo "$zones"
         return 1
     fi
@@ -241,6 +239,7 @@ function _zone_exists() {
     origin=$(echo "$zones"|jq -r '.data[0].origin')
 
     if [ "$zone_name" != "$origin" ]; then
+        _log "Zone does not exists on Account '$zone_name' != '$origin'"
         return 1
     fi
 
@@ -332,14 +331,14 @@ sub_delete() {
         exit 1
     fi
 
-    local request_uri=$(_zone_exists "$MY_ZONE")
-    if [ -z ${request_uri+x} ]; then
+    local request_uri=$(_zone_exists "$MY_ZONE"||echo "ERROR")
+    if [[ "$request_uri" =~ "ERROR" ]]; then
         printf "Zone does not exist (my_zone: %s, Request URI: %s)" "$MY_ZONE" "$request_uri"
         exit 1
     fi
 
-    local data=$(_get_zone "$request_uri")
-    if [ $? -ne 0 ]; then
+    local data=$(_get_zone "$request_uri"||echo "ERROR")
+    if [[ "$data" =~ "ERROR" ]]; then
         printf "Could not retrieve zone: %s" "$data"
         exit 1
     fi
@@ -353,8 +352,8 @@ sub_delete() {
     local request_call="$update_call/zone/$request_uri"
     _log "Update call: $request_call"
 
-    local update_request=$(_make_request "$request_call" "$payload")
-    if [ $? -ne 0 ]; then
+    local update_request=$(_make_request "$request_call" "$payload"||echo "ERROR")
+    if [[ "$update_request" =~ "ERROR" ]]; then
         printf "Update failed: %s" "$update_request"
         exit 1
     fi
@@ -372,8 +371,8 @@ sub_help() {
 
 # show current zone "info"
 sub_show() {
-    local request_uri=$(_zone_exists "$MY_ZONE")
-    if [ $? -ne 0 ]; then
+    local request_uri=$(_zone_exists "$MY_ZONE"||echo "ERROR")
+    if [[ "$request_uri" =~ "ERROR" ]]; then
         echo "$request_uri"
         exit 1
     fi
@@ -407,17 +406,24 @@ sub_update() {
         return 1
     fi
 
-    local request_uri=$(_zone_exists "$MY_ZONE")
-    if [ -z ${request_uri+x} ]; then
-        printf "Zone does not exist (my_zone: %s, Request URI: %s)" "$MY_ZONE" "$request_uri"
+    dc=""
+    dc=${dc}X
+    _log "AAAA-$dc $MY_ZONE"
+    local request_uri=$(_zone_exists "$MY_ZONE"||echo "ERROR")
+    if [[  "$request_uri" =~ "ERROR" ]]; then
+        printf "Zone does not exist (my_zone: %s) %s" "$MY_ZONE" "$request_uri"
         return 1
     fi
+
+    dc=${dc}X
+    _log "AAAA-$dc"
 
     local data=$(_get_zone "$request_uri")
     if [ -z "$data"  ]; then
         printf "Could not retrieve zone: %s" "$data"
         return 1
     fi
+    #exit 99
 
     _log "Zone data: $data"
 
@@ -433,13 +439,13 @@ sub_update() {
     local request_call="$update_call/zone/$request_uri"
     _log "Update call: $request_call"
 
-    local update_request=$(_make_request "$request_call" "$payload")
-    if [ -z ${update_request+x} ]; then
+    local update_request=$(_make_request "$request_call" "$payload"||echo "ERROR")
+    if [[ "$update_request" =~ "ERROR" ]]; then
         printf "Update failed: %s" "$update_request"
         return 1
     fi
    
-    _log "API response (PUT/update): $update_request (Code: $?)"
+    _log "API response (PUT/update): $update_request"
 
     echo "Success!"
     exit 0
