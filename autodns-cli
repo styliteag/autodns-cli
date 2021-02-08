@@ -5,7 +5,7 @@
 
 declare -r prog=$(basename "$0")
 declare -r endpoint=https://api.autodns.com/v1
-declare -r ttl=120
+declare -r ttl=600
 
 if ! which jq >/dev/null 2>&1; then
     echo "jq not installed, please install jq"
