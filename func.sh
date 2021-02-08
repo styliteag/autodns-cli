@@ -1,7 +1,10 @@
 function _log() {
     local msg=$1
-    logger -t "$prog" -i "${prog}: ${msg}"
-}
+    #logger -t "$prog" -i "${prog}: ${msg}"
+    #if [[ "DEBUGSYSLOG" = "true" ]] ;then logger -t "$prog" -i "${prog}: ${msg}";fi 
+    #if [[ "DEBUGSTDERR" = "true" ]] ;then echo "$msg" >&2 ;fi 
+    #echo "$msg" >&2 
+ }
 
 # autodns calls
 # @test `test_build_call`
@@ -11,9 +14,9 @@ function _build_call() {
     local method=$1
 
     curl+=(curl)
-    if [ -n "$WITH_CHARLES" ]; then
-        curl+=(--proxy 127.0.0.1:8888 -k)
-    fi
+#    if [ -n "$WITH_CHARLES" ]; then
+#        curl+=(--proxy 127.0.0.1:8888 -k)
+#    fi
     curl+=(--silent)
     curl+=(--show-error)
     curl+=(--user-agent "$prog")
@@ -38,6 +41,8 @@ function _make_request() {
     local body
     local response
 
+    body=
+
     if [ $# -gt 1 ]; then
         if [ -n "$2" ]; then
             body="$2"
@@ -45,7 +50,7 @@ function _make_request() {
     fi
 
     _log "_make_request: $cmd"
-    _log "_make_request: $body"
+    #_log "_make_request: $body"
 
     if [ -n "$body" ]; then
         _log "With body!"
@@ -58,16 +63,16 @@ function _make_request() {
     if [ $? -ne 0 ]; then
         _log "Error in curl request!"
 
-        return $?
+        return 1
     fi
-
-    local error=$(_validate_response "$response")
+ 
+    _validate_response "$response"
     if [ $? -ne 0 ]; then
-        echo "$error"
-        return $?
+        echo "error"
+        return 1
     fi
 
-    _log "Validate response: $error ($?) - $response"
+    #_log "Validate response: $error ($?) - $response"
 
     echo "$response"
 }
@@ -81,14 +86,14 @@ function _validate_response() {
     _log "_validate_response"
 
     # I dont why why "jq -e" does not work here
-    local valid_json=$(echo "$resp"|jq -c -r .)
-    if [ $? -ne 0 ]; then
-        printf "Invalid or broken JSON (%s): %s" "$valid_json" "$resp"
-        return $?
-    fi
+#    echo "$resp"|jq -c -r .
+#    if [ $? -ne 0 ]; then
+#        printf "Invalid or broken JSON (%s): %s" "$valid_json" "$resp"
+#        return 1
+#    fi
 
     local status=$(echo "$resp"|jq -c -r .status.type)
-    if [ -z ${status+x} ]; then
+    if [ -z "${status}" ]; then
         echo "Status not set, something went really wrong!"
         return 1
     fi
@@ -223,7 +228,7 @@ function _zone_exists() {
     local zones=$(_make_request "$request" "$filter")
     if [ $? -ne 0 ]; then
         echo "$zones"
-        return $?
+        return 1
     fi
 
     _log "fetch zones: $zones"

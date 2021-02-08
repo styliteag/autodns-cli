@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #set -x
-#set -euxo pipefail
+set -euo pipefail
 
 declare -r prog=$(basename "$0")
 declare -r endpoint=https://api.autodns.com/v1
