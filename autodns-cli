@@ -25,7 +25,6 @@ if [ -f ~/.autodns-cli.rc ]; then
 fi
 
 source $( cd "$( dirname $(readlink -f ${BASH_SOURCE[0]}) )" >/dev/null 2>&1 && pwd )/func.sh
-source $( cd "$( dirname $(readlink -f ${BASH_SOURCE[0]}) )" >/dev/null 2>&1 && pwd )/commands.sh
 
 subcommand=$1
 case $subcommand in
