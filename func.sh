@@ -377,8 +377,8 @@ sub_show() {
         exit 1
     fi
 
-    local data=$(_get_zone "$request_uri")
-    if [ $? -ne 0 ]; then
+    local data=$(_get_zone "$request_uri"||echo "ERROR")
+    if [[ "$data" =~ "ERROR" ]]; then
         echo "$data"
         exit 1
     fi
@@ -412,8 +412,8 @@ sub_update() {
         return 1
     fi
 
-    local data=$(_get_zone "$request_uri")
-    if [ -z "$data"  ]; then
+    local data=$(_get_zone "$request_uri"||echo "ERROR")
+    if [[ "$data" =~ "ERROR"  ]‚]; then
         printf "Could not retrieve zone: %s" "$data"
         return 1
     fi
